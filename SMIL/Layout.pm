@@ -19,6 +19,18 @@ my @layoutAttributes = @systemSwitchAttributes;
 
 my $root_layout = "root-layout";
 
+sub getRootHeight {
+    my $self = shift;
+    my $rl = $self->getContentObjectByName( $root_layout );
+    return $rl ? $rl->getRootHeight() : 0;    
+}
+
+sub getRootWidth {
+    my $self = shift;
+    my $rl = $self->getContentObjectByName( $root_layout );
+    return $rl ? $rl->getRootWidth() : 0;    
+}
+
 sub init {
     my $self = shift;
     $self->SUPER::init( "layout" );
@@ -56,10 +68,25 @@ sub init {
 my $name = 'name';
 my $id = "id";
 my @regionAttributes = ( $id, 'top', 'left', 'height', 'width',
-			'z-index', 'background-color' );
+			'z-index', 'background-color', );
+
+sub process_for_size {
+    my $content = shift;
+    my( $height, $width );
+
+    if( $content =~ /^GIF/ ) {
+	my $string = $1 if $content =~ /GIF.{3}(.{4})/;
+	@stuff = unpack "SS", $string;
+	$height = $stuff[ 1 ];
+	$width = $stuff[ 0 ];
+    }
+
+    return( $height, $width );
+}
 
 my $regions = "regions";
-
+my $module_defined_src = "sm-src";
+my $module_defined_align = "sm-align";
 
 sub addRegion {
     my $self = shift;
@@ -69,6 +96,80 @@ sub addRegion {
 
     # If they used "name" instead of "id" fix that
     $hash{ $id } = $hash{ $name } if $hash{ $name };
+
+    # If they specified the src inside the region, then
+    # figure out the dimensions from the src file
+    if( $hash{ $module_defined_src } ) {
+	my $ref = $hash{ $module_defined_src };
+	my $content;
+
+	# If a http ref, if we have LWP installed use it to
+	# get the image and determine the dimensions
+	if( $ref =~ /^http/ ) {
+	    eval 'use LWP::Simple;';
+	    my $lwp_installed = !$@;
+	    
+	    if( $lwp_installed ) {
+		$content = LWP::Simple::get $ref;
+	    }
+	    else {
+		die "LWP not installed.\nYou may not use http sources" .
+		    " in your region definitions.\nSmil.pm cannot " .
+			"connect and determine file size without LWP\n";
+	    }
+	}
+	else {
+	    # Ok, hope it is local to the script.
+	    if( open FILE, $ref ) {
+		undef $/;
+		$content = <FILE>;
+	    }
+	    else {
+		die "Couldn't find the file $ref.\n" .
+	    "Make sure that $ref is relative to the script.\n" .
+	    "Using src to define a region does not set the\n".
+	    "src for the SMIL file but is used to determine\n" .
+	    "file size.\n";
+	    }
+	}
+	
+	if( $content ) {
+	    # Figure out what the size is 
+	    ( $height, $width ) = process_for_size( $content );
+	    
+	    if( $height && $width ) {
+		# Always respect what users set.
+		$hash{ height } = $height unless defined( $hash{ height } );
+		$hash{ width } = $width unless defined( $hash{ width } );
+	    }
+	}
+    }
+
+    # Now, if we have some formatting in the "sm-align" attribute
+    # figure out the top or left.
+    if( $hash{ $module_defined_align } ) {
+	# Get the root layout object
+	my $ht = $self->getRootHeight();
+	my $wh = $self->getRootWidth();
+
+	# Calculate the top and left unless they are set already
+	
+	die "Need height to calculate alignment." 
+	    unless defined( $hash{ height } );
+	if( !defined( $hash{ top } ) ) {
+	    # Figure out where to put this item
+	    # Get the total size / 2 minus the item size / 2
+	    $hash{ top } = int( ( $ht / 2 ) - ( $hash{ height } / 2 ) );
+	}
+	
+	die "Need width to calculate alignment. " 
+	    unless defined( $hash{ width } );
+	if( !defined( $hash{ left } ) ) {
+	    # Get the total size / 2 minus the item size / 2
+	    $hash{ left } = int( ( $wh / 2 ) - ( $hash{ width } / 2 ) );
+	}
+
+    }
 
     my %attrs = $self->createValidAttributes( { %hash },  
 					     [@regionAttributes] );

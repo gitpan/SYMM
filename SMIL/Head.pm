@@ -26,6 +26,20 @@ sub init {
     $self->initMetas( @_ ) if( $hash{ 'meta' } );
 }
 
+sub getRootHeight {
+    my $self = shift;
+    my $ly = $self->getContentObjectByName( $layout );
+    return $ly ? $ly->getRootHeight() : 0;    
+}
+
+sub getRootWidth {
+    my $self = shift;
+    my $ly = $self->getContentObjectByName( $layout );
+    return $ly ? $ly->getRootWidth() : 0;    
+}
+
+
+
 sub initLayout {
     my $self = shift;
     $self->{$layout} = new SYMM::SMIL::Layout( @_ );
