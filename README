@@ -1,0 +1,69 @@
+Please send all email to cdawson@real.com
+
+WHAT IS THIS?
+
+The Smil.pm module.  This module provides an interface for generating 
+SMIL files using perl.  SMIL is a W3C langauge for multi-media authoring.
+
+HOW DO I INSTALL IT?
+
+Installation of this module should be as simple as copying the entire
+directory tree 'SYMM' into your perl lib directory.  On my RedHat 5.1 
+distribution this means, after unzipping and untarring, I use this command:
+
+'cp -R SYMM /usr/lib/perl5/'
+
+Or, you could add a symbolic link using this command:
+
+'ln -s /install/dir/SYMM /usr/lib/perl5/SYMM'
+
+This only works on OSes which support symlinks, on other OS you will have to
+copy the directory.  
+
+If you don't have adminstrator/root access on the machine you want to 
+install it on, you will have to modify your @INC variable, which is where
+perl searches for modules like this one.  You can do one of two things within
+your perl scripts:
+
+use lib '/install/path/';
+use SYMM::Smil;
+
+OR
+
+BEGIN { unshift @INC, '/install/path/'; }
+
+Either one of these commands will allow you to use the module, provided
+you fill in the correct path for '/install/path/'
+
+WHAT SYSTEMS DOES IT WORK WITH?
+
+I have tested it on several Linux distributions and ActiveState Perl for
+Win32.  The module is pure perl, so it should work with any standard
+perl distribution.  If it doesn't, please email me and tell me your problem.
+
+WHERE IS THE DOCUMENTATION?
+
+Run 'perldoc SYMM::Smil'  If you haven't installed it correctly, you will 
+have to perpend the installation directory to the front of the module
+name.
+
+WHERE ARE THE EXAMPLES?
+
+I have provided a few examples within the perldoc documentation.  It is 
+a top priority for me to add these to the web page for perlysmil, which 
+is here:
+
+http://moothra.prognet.com/perlysmil/
+
+I'll try to add more to this soon.
+
+WHERE IS THE ONLINE DOCUMENTATION?
+
+http://moothra.prognet.com/perlysmil/
+
+
+Hope this helps you with MM authoring.
+
+Chris Dawson
+cdawson@real.com
+
